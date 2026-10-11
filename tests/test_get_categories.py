@@ -3,8 +3,8 @@ import typing
 
 import pytest
 
-import gc_reports.accounts
-from gc_reports.expenses import ExpenseCategory, get_categories_by_type
+from gc_reports.account import get_accounts
+from gc_reports.income_expense import IncomeExpenseCategory, get_categories_by_type
 
 # Minimal gnucash schema covering the tables and columns used by the code under test.
 SCHEMA_SQL = """
@@ -67,8 +67,10 @@ def create_connection(sql: str) -> sqlite3.Connection:
         pytest.param(
             SIMPLE_SQL,
             [
-                ExpenseCategory("b07029a6658b46d98b368e2671bc1c25", "Auto:Fees"),
-                ExpenseCategory("83920b7ade964953866a36031a2b6ba5", "Medical Expenses"),
+                IncomeExpenseCategory("b07029a6658b46d98b368e2671bc1c25", "Auto:Fees"),
+                IncomeExpenseCategory(
+                    "83920b7ade964953866a36031a2b6ba5", "Medical Expenses"
+                ),
             ],
             "EXPENSE",
             id="simple-expense",
@@ -76,7 +78,7 @@ def create_connection(sql: str) -> sqlite3.Connection:
         pytest.param(
             SIMPLE_SQL,
             [
-                ExpenseCategory("979e71279ca54197ac65e53a640dc479", "Salary"),
+                IncomeExpenseCategory("979e71279ca54197ac65e53a640dc479", "Salary"),
             ],
             "INCOME",
             id="simple-income",
@@ -85,12 +87,12 @@ def create_connection(sql: str) -> sqlite3.Connection:
 )
 def test_get_categories_by_type(
     sql: str,
-    expected_categories: list[ExpenseCategory],
+    expected_categories: list[IncomeExpenseCategory],
     type: typing.Literal["EXPENSE", "INCOME"],
 ) -> None:
     # GIVEN: an in-memory gnucash database built from the SQL fixture
     con = create_connection(sql)
-    accounts = gc_reports.accounts.get_accounts(con)
+    accounts = get_accounts(con)
 
     # WHEN: we call the function to get expense categories
     categories = get_categories_by_type(con, accounts, type)
