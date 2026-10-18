@@ -1,12 +1,14 @@
 import xy
 
+from gc_reports.algebra import RealNumber
+
 
 def stacked_bar_chart(
     title: str,
     x_axis: str,
     x_labels: list[str],
     y_axis: str,
-    y_data: list[tuple[str, list[float]]],
+    y_data: list[tuple[str, list[RealNumber]]],
 ) -> None:
     """
     Generate a stacked bar chart using the provided data.
@@ -18,7 +20,8 @@ def stacked_bar_chart(
     """
 
     bars = [
-        xy.bar(x_labels, values, name=category_name) for category_name, values in y_data
+        xy.bar(x_labels, [float(value) for value in values], name=category_name)
+        for category_name, values in y_data
     ]
     chart = xy.bar_chart(
         *bars,

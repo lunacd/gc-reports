@@ -13,6 +13,9 @@ class RealNumber:
             raise ValueError("Denominator cannot be zero.")
         return self.num / self.denom
 
+    def __neg__(self) -> RealNumber:
+        return RealNumber(num=-self.num, denom=self.denom)
+
 
 def sum_real_numbers(numbers: typing.Iterable[RealNumber]) -> RealNumber:
     total_num = 0
