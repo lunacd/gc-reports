@@ -16,6 +16,19 @@ class RealNumber:
     def __neg__(self) -> RealNumber:
         return RealNumber(num=-self.num, denom=self.denom)
 
+    def __add__(self, rhs: RealNumber):
+        if self.denom == 0 or rhs.denom == 0:
+            raise ValueError("Denominator cannot be zero.")
+        
+        gcd = math.gcd(self.denom, rhs.denom)
+        common_denom = (self.denom * rhs.denom) // gcd
+
+        result_num = ((self.num * rhs.denom) + (rhs.num * self.denom)) // gcd
+        return RealNumber(result_num, common_denom)
+
+    def __sub__(self, rhs: RealNumber):
+        return self + (-rhs)
+
 
 def sum_real_numbers(numbers: typing.Iterable[RealNumber]) -> RealNumber:
     total_num = 0

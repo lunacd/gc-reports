@@ -8,7 +8,7 @@ from gc_reports.account import get_accounts
 from gc_reports.algebra import RealNumber
 from gc_reports.chart import stacked_bar_chart
 from gc_reports.date_utils import format_month_ranges, generate_month_ranges
-from gc_reports.income_expense import get_categories_by_type, get_total_in_time_ranges
+from gc_reports.income_expense import get_total_in_time_ranges
 from gc_reports.transaction import (
     get_transaction_date_range,
 )
@@ -70,6 +70,10 @@ def report(
     # Chart expense
     y_data = get_total_in_time_ranges(con, accounts, month_ranges, "EXPENSE")
     stacked_bar_chart("Expense by Category", "Month", x_axis_labels, "Amount", y_data)
+
+    # Budget report
+    
+    
 
 def main():
     report()

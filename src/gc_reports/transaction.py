@@ -2,6 +2,8 @@ import dataclasses
 import datetime
 import sqlite3
 
+from gc_reports.algebra import RealNumber
+
 
 @dataclasses.dataclass
 class Transaction:
@@ -9,6 +11,12 @@ class Transaction:
     description: str
     value_num: int | None
     value_denom: int | None
+
+    @property
+    def value(self) -> RealNumber | None:
+        if self.value_num is None or self.value_denom is None:
+            return None
+        return RealNumber(self.value_num, self.value_denom)
 
 
 def get_transactions_in_date_range(
