@@ -1,4 +1,3 @@
-from gc_reports.account import Accounts
 import dataclasses
 import datetime
 import pathlib
@@ -7,6 +6,7 @@ import tomllib
 
 import pydantic
 
+from gc_reports.account import Accounts
 from gc_reports.algebra import RealNumber
 from gc_reports.date_utils import next_month_start
 from gc_reports.income_expense import IncomeExpenseCategory, get_categories_by_type
@@ -26,19 +26,23 @@ class Budget(pydantic.BaseModel):
             result.setdefault(budget.category, [])
             result[budget.category].append(budget)
         for category, items in result.items():
-            result[category] = sorted(items, key=lambda item: item.effecitve_date)
+            result[category] = sorted(items, key=lambda item: item.effective_date)
         return result
 
 
 class BudgetItem(pydantic.BaseModel):
-    effecitve_date: datetime.datetime
+    effective_date: datetime.datetime
     category: str
     monthly_budget: int
     max_rollover: int
 
+    @pydantic.field_validator("effective_date", mode="after")
+    @classmethod
+    def set_local_timezone(cls, value: datetime.datetime):
+        return value.replace(tzinfo=datetime.datetime.now().astimezone().tzinfo)
 
 def load_budget(path: pathlib.Path) -> Budget:
-    with path.open("b") as f:
+    with path.open("br") as f:
         raw = tomllib.load(f)
         return Budget.model_validate(raw)
 
@@ -78,6 +82,9 @@ def evaluate_budget_in_date_range(
     start: datetime.datetime,
     end: datetime.datetime,
 ) -> BudgetResult | None:
+    if category.name not in budget.budget_by_category:
+        return None
+
     budget_items = budget.budget_by_category[category.name]
 
     if len(budget_items) == 0:
@@ -87,12 +94,12 @@ def evaluate_budget_in_date_range(
     transactions = get_transactions_in_date_range(
         con,
         category.account_guid,
-        budget_items[0].effecitve_date,
+        budget_items[0].effective_date,
         end,
     )
 
     # Process transactions
-    next_month = next_month_start(budget_items[0].effecitve_date)
+    next_month = next_month_start(budget_items[0].effective_date)
     remaining_budget = RealNumber(0, 100)
     in_range = False
     rolled_over = RealNumber(0, 100)
@@ -111,7 +118,7 @@ def evaluate_budget_in_date_range(
         # month, obviously.
         # Then:
         # 1. The rolled_over amount should not count the budget allowance of July, as that is in the requested range.
-        # Hence in_range processing should happen first.
+        # Hence, in_range processing should happen first.
         # 2. The new policy going into effect on July 1st should affect July budgeting, so that should be processed
         # second.
         # 3. The new month is processed last.
@@ -123,7 +130,7 @@ def evaluate_budget_in_date_range(
         if (
             current_budget_index + 1 < len(budget_items)
             and transaction.post_date
-            > budget_items[current_budget_index + 1].effecitve_date
+            > budget_items[current_budget_index + 1].effective_date
         ):
             current_budget_index += 1
 

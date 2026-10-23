@@ -6,12 +6,11 @@ import click
 
 from gc_reports.account import get_accounts
 from gc_reports.algebra import RealNumber
+from gc_reports.budget import generate_all_budget_stats
 from gc_reports.chart import stacked_bar_chart
 from gc_reports.date_utils import format_month_ranges, generate_month_ranges
 from gc_reports.income_expense import get_total_in_time_ranges
-from gc_reports.transaction import (
-    get_transaction_date_range,
-)
+from gc_reports.transaction import get_transaction_date_range
 
 
 @click.command()
@@ -31,8 +30,10 @@ from gc_reports.transaction import (
     "db_path",
     type=click.Path(path_type=pathlib.Path, exists=True, dir_okay=False, readable=True),
 )
+@click.argument("budget_path", type=click.Path(path_type=pathlib.Path, exists=True))
 def report(
     db_path: pathlib.Path,
+    budget_path: pathlib.Path,
     start_date: datetime.datetime | None,
     end_date: datetime.datetime | None,
 ):
@@ -64,16 +65,22 @@ def report(
     x_axis_labels = format_month_ranges(month_ranges)
 
     # Chart income
-    y_data: list[tuple[str, list[RealNumber]]] = get_total_in_time_ranges(con, accounts, month_ranges, "INCOME")
+    y_data: list[tuple[str, list[RealNumber]]] = get_total_in_time_ranges(
+        con, accounts, month_ranges, "INCOME"
+    )
     stacked_bar_chart("Income by Category", "Month", x_axis_labels, "Amount", y_data)
 
     # Chart expense
     y_data = get_total_in_time_ranges(con, accounts, month_ranges, "EXPENSE")
     stacked_bar_chart("Expense by Category", "Month", x_axis_labels, "Amount", y_data)
 
-    # Budget report
-    
-    
+    # Evaluate budget
+    budget_stats = generate_all_budget_stats(
+        con, accounts, budget_path, start_date, end_date
+    )
+    for category, stat in budget_stats.items():
+        print(category, stat)
+
 
 def main():
     report()

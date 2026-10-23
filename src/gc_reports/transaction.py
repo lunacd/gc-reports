@@ -50,7 +50,7 @@ def get_transactions_in_date_range(
     res = cur.execute(query, parameters)
     return [
         Transaction(
-            post_date=transaction[0],
+            post_date=datetime.datetime.fromisoformat(transaction[0]).replace(tzinfo=datetime.UTC),
             description=transaction[1],
             value_num=transaction[2],
             value_denom=transaction[3],

@@ -17,4 +17,9 @@ gc-reports = "gc_reports.main:main"
 package = true
 
 [dependency-groups]
-dev = ["pytest>=9.1.1", "ruff>=0.16.3", "ty>=0.0.72"]
+dev = [
+    "pyrefly==1.4.0",
+    "pytest>=9.1.1",
+    "ruff>=0.16.3",
+    "ty>=0.0.72",
+]
